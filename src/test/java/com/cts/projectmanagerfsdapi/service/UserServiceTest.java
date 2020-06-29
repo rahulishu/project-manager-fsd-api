@@ -1,0 +1,115 @@
+package com.cts.projectmanagerfsdapi.service;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import com.cts.projectmanagerfsdapi.model.User;
+import com.cts.projectmanagerfsdapi.repository.UserRepository;
+
+@RunWith(MockitoJUnitRunner.class)
+public class UserServiceTest {
+
+	@InjectMocks
+	private UserService userService;
+
+	@Mock
+	private UserRepository userRepository;
+
+	private static final Integer USER_ID = Integer.valueOf(1);
+
+	@Before
+	public void init() {
+		MockitoAnnotations.initMocks(this);
+		ReflectionTestUtils.setField(userService, "userRepository", userRepository);
+	}
+
+	@Test
+	public void testAddUser() {
+
+		User addUser = new User();
+		addUser.setUserId(USER_ID);
+		addUser.setFirstName("Iron");
+		addUser.setLastName("Man");
+		addUser.setEmployeeId(12345);
+		when(userRepository.save(addUser)).thenReturn(addUser);
+
+		User addedUser = userService.addUser(addUser);
+
+		assertNotNull(addedUser);
+		assertTrue(addUser.getFirstName().equalsIgnoreCase(addedUser.getFirstName()));
+
+	}
+
+	@Test
+	public void testEditUSer() {
+
+		User editUser = new User();
+		editUser.setFirstName("Iron");
+		when(userRepository.save(editUser)).thenReturn(editUser);
+
+		userService.editUser(editUser);
+
+	}
+
+	@Test
+	public void testGetAllUsers() {
+
+		List<User> listOfAllUsers = new ArrayList<>();
+		User user1 = new User();
+
+		User user2 = new User();
+
+		listOfAllUsers.add(user1);
+		listOfAllUsers.add(user2);
+
+		when(userRepository.findAll()).thenReturn(listOfAllUsers);
+
+		List<User> allUsers = userService.getAllUsers();
+
+		assertNotNull(allUsers);
+		assertEquals(2, allUsers.size());
+
+	}
+
+	@Test
+	public void testGetUserById() {
+
+		User user = new User();
+		user.setFirstName("Man");
+
+		Optional<User> optionalUser = Optional.of(user);
+		when(userRepository.findById(USER_ID)).thenReturn(optionalUser);
+
+		Optional<User> userById = userService.getUserById(USER_ID);
+		assertNotNull(userById);
+		if (userById.isPresent()) {
+			assertEquals(userById.get().getFirstName(), user.getFirstName());
+		}
+
+	}
+
+	@Test
+	public void testDeleteUser() {
+
+		doNothing().when(userRepository).deleteById(USER_ID);
+		userService.deleteUser(USER_ID);
+
+	}
+
+}

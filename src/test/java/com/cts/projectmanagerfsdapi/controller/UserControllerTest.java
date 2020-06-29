@@ -1,0 +1,242 @@
+package com.cts.projectmanagerfsdapi.controller;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import com.cts.projectmanagerfsdapi.model.User;
+import com.cts.projectmanagerfsdapi.service.UserService;
+
+@RunWith(SpringRunner.class)
+@WebMvcTest(UserController.class)
+public class UserControllerTest {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@MockBean
+	private UserService userService;
+
+	@Test
+	public void testAddUser() throws Exception {
+
+		User addUser = new User();
+		addUser.setUserId(Integer.valueOf(1));
+		addUser.setFirstName("Iron");
+		addUser.setLastName("Man");
+		addUser.setEmployeeId(10000);
+		when(userService.addUser(addUser)).thenReturn(addUser);
+
+		String exampleUser = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result = mockMvc.perform(post("/user/add").accept(MediaType.APPLICATION_JSON).content(exampleUser)
+				.contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.CREATED.value() == result.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testAddUserWithMissinRequiredFields() throws Exception {
+
+		String firstNameMissing = "{\"userId\":1,\"firstName\":null,\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result1 = mockMvc.perform(post("/user/add").accept(MediaType.APPLICATION_JSON)
+				.content(firstNameMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.BAD_REQUEST.value() == result1.getResponse().getStatus());
+
+		String lastNameMissing = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":null,\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result2 = mockMvc.perform(post("/user/add").accept(MediaType.APPLICATION_JSON)
+				.content(lastNameMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.BAD_REQUEST.value() == result2.getResponse().getStatus());
+
+		String employeeIdMissing = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":null,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result3 = mockMvc.perform(post("/user/add").accept(MediaType.APPLICATION_JSON)
+				.content(employeeIdMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.BAD_REQUEST.value() == result3.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testEditUser() throws Exception {
+
+		User editUser = new User();
+		editUser.setUserId(Integer.valueOf(1));
+		editUser.setFirstName("Iron");
+		editUser.setLastName("Man");
+		editUser.setEmployeeId(10000);
+
+		Optional<User> optionalUser = Optional.of(editUser);
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		doNothing().when(userService).editUser(editUser);
+
+		String exampleUser = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result = mockMvc.perform(post("/user/edit/1").accept(MediaType.APPLICATION_JSON).content(exampleUser)
+				.contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.CREATED.value() == result.getResponse().getStatus());
+		assertEquals(exampleUser, result.getResponse().getContentAsString());
+
+	}
+
+	@Test
+	public void testEditUserWithMissingRequiredFields() throws Exception {
+
+		User editUser = new User();
+		editUser.setUserId(Integer.valueOf(1));
+		editUser.setFirstName("Iron");
+		editUser.setLastName("Man");
+		editUser.setEmployeeId(10000);
+
+		Optional<User> optionalUser = Optional.of(editUser);
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		doNothing().when(userService).editUser(editUser);
+
+		String firstNameMissing = "{\"userId\":1,\"firstName\":null,\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result = mockMvc.perform(post("/user/edit/1").accept(MediaType.APPLICATION_JSON)
+				.content(firstNameMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.NOT_FOUND.value() == result.getResponse().getStatus());
+
+		String lastNameMissing = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":null,\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result2 = mockMvc.perform(post("/user/edit/1").accept(MediaType.APPLICATION_JSON)
+				.content(lastNameMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.NOT_FOUND.value() == result2.getResponse().getStatus());
+
+		String employeeIdMissing = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":null,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result3 = mockMvc.perform(post("/user/edit/1").accept(MediaType.APPLICATION_JSON)
+				.content(employeeIdMissing).contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.NOT_FOUND.value() == result3.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testEditUserWithInvalidId() throws Exception {
+
+		Optional<User> optionalUser = Optional.empty();
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		String exampleUser = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result = mockMvc.perform(post("/user/edit/99").accept(MediaType.APPLICATION_JSON).content(exampleUser)
+				.contentType(MediaType.APPLICATION_JSON)).andReturn();
+
+		assertTrue(HttpStatus.NOT_FOUND.value() == result.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testGetAllUsers() throws Exception {
+
+		List<User> users = new ArrayList<>();
+		User user = new User();
+		user.setFirstName("Iron");
+		users.add(user);
+
+		when(userService.getAllUsers()).thenReturn(users);
+
+		MvcResult result = mockMvc.perform(get("/user/allUsers")).andDo(print()).andExpect(status().isOk()).andReturn();
+
+		assertTrue(HttpStatus.OK.value() == result.getResponse().getStatus());
+		assertTrue(result.getResponse().getContentAsString().contains("Iron"));
+	}
+
+	@Test
+	public void testGetUserById() throws Exception {
+
+		User user = new User();
+		user.setUserId(Integer.valueOf(1));
+		user.setFirstName("Iron");
+		user.setLastName("Man");
+		user.setEmployeeId(10000);
+
+		Optional<User> optionalUser = Optional.of(user);
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		String userByIdString = "{\"userId\":1,\"firstName\":\"Iron\",\"lastName\":\"Man\",\"employeeId\":10000,\"projectId\":null,\"taskId\":null}";
+
+		MvcResult result = mockMvc.perform(get("/user/1")).andDo(print()).andReturn();
+
+		assertTrue(HttpStatus.OK.value() == result.getResponse().getStatus());
+		assertEquals(userByIdString, result.getResponse().getContentAsString());
+
+	}
+
+	@Test
+	public void testGetUserByIdWithInvalidId() throws Exception {
+
+		Optional<User> optionalUser = Optional.empty();
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		MvcResult result = mockMvc.perform(get("/user/99")).andDo(print()).andReturn();
+
+		assertTrue(HttpStatus.BAD_REQUEST.value() == result.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testDeleteUser() throws Exception {
+
+		User user = new User();
+		user.setUserId(Integer.valueOf(1));
+		user.setFirstName("Iron");
+		user.setLastName("Man");
+		user.setEmployeeId(10000);
+
+		Optional<User> optionalUser = Optional.of(user);
+		when(userService.getUserById(Integer.valueOf(1))).thenReturn(optionalUser);
+
+		doNothing().when(userService).deleteUser(Integer.valueOf(1));
+
+		MvcResult result = mockMvc.perform(delete("/user/1")).andDo(print()).andExpect(status().isAccepted())
+				.andReturn();
+
+		assertTrue(HttpStatus.ACCEPTED.value() == result.getResponse().getStatus());
+
+	}
+
+	@Test
+	public void testDeleteUserWithInvalidId() throws Exception {
+
+		doNothing().when(userService).deleteUser(Integer.valueOf(1));
+
+		MvcResult result = mockMvc.perform(delete("/user/99")).andDo(print()).andExpect(status().isBadRequest())
+				.andReturn();
+
+		assertTrue(HttpStatus.BAD_REQUEST.value() == result.getResponse().getStatus());
+	}
+}
