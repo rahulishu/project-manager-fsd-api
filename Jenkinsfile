@@ -13,7 +13,7 @@ node {
             env.version = pom.version
         }
 
-        /* stage('Image') {
+        stage('Image') {
             dir ('project-manager-fsd-api') {
                 def app = docker.build "project-manager-fsd-api:${env.version}"
                 app.push()
@@ -22,8 +22,6 @@ node {
 
         stage ('Run') {
             docker.image("project-manager-fsd-api:${env.version}").run('-p 8081:8081 -h project-manager-fsd-api --name project-manager-fsd-api')
-        }
-		*/
-    
+        }    
 
 }
